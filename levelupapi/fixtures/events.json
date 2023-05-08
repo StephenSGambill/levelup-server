@@ -1,0 +1,26 @@
+[
+  {
+    "model": "levelupapi.event",
+    "pk": 1,
+    "fields": {
+      "description": "Minecraft Night",
+      "date": "20230503",
+      "time": "13:50",
+      "organizer": 1,
+      "attendees": [],
+      "game": 1
+    }
+  },
+  {
+    "model": "levelupapi.event",
+    "pk": 2,
+    "fields": {
+      "description": "Unsettled Settlers",
+      "date": "20230505",
+      "time": "21:00",
+      "organizer": 1,
+      "attendees": [],
+      "game": 2
+    }
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "model": "levelupapi.game",
+    "pk": 1,
+    "fields": {
+      "title": "Minecraft",
+      "maker": "Mojang Studios",
+      "number_of_players": "1 or more",
+      "skill_level": "Beginner to advanced",
+      "game_type": 3,
+      "gamer": 1
+    }
+  },
+  {
+    "model": "levelupapi.game",
+    "pk": 2,
+    "fields": {
+      "title": "Settlers of Catan",
+      "maker": "Klaus Teuber",
+      "number_of_players": "3-4 (up to 6 with expansion)",
+      "skill_level": "Beginner to intermediate",
+      "game_type": 1,
+      "gamer": 1
+    }
+  }
+]
