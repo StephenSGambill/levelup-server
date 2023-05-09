@@ -5,6 +5,8 @@ from rest_framework.response import Response
 from rest_framework import serializers, status
 from levelupapi.models import Event, Gamer, Game
 from rest_framework.decorators import action
+from django.db.models import Count
+from django.db.models import Q
 
 
 class EventView(ViewSet):
@@ -17,11 +19,16 @@ class EventView(ViewSet):
             Response -- JSON serialized list of events
         """
 
-        events = Event.objects.all()
+        # events = Event.objects.all()
         gamer = Gamer.objects.get(user=request.auth.user)
-
-        for event in events:
-            event.joined = gamer in event.attendees.all()
+        # events = Event.objects.annotate(attendee_count=Count("attendees"))
+        # for event in events:
+        #     event.joined = gamer in event.attendees.all()
+        # above three lines replace with following
+        events = Event.objects.annotate(
+            attendees_count=Count("attendees"),
+            joined=Count("attendees", filter=Q(attendees=gamer)),
+        )
 
         serializer = EventSerializer(events, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -32,34 +39,24 @@ class EventView(ViewSet):
         Returns:
             Response -- JSON serialized event
         """
-
-        event = Event.objects.get(pk=pk)
-        serializer = EventSerializer(event)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        try:
+            event = Event.objects.get(pk=pk)
+            serializer = EventSerializer(event)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Event.DoesNotExist as ex:
+            return Response({"message": ex.args[0]}, status=status.HTTP_404_NOT_FOUND)
 
     def create(self, request):
         """Handle POST operations
 
-        Returns
-            Response -- JSON serialized event instance
+        Returns:
+            Response -- JSON serialized game instance
         """
-        organizer_id = request.data["organizer"]
-        organizer = Gamer.objects.get(pk=organizer_id)
-        game = Game.objects.get(pk=request.data["game"])
-
-        event = Event.objects.create(
-            description=request.data["description"],
-            date=request.data["date"],
-            time=request.data["time"],
-            organizer=organizer,
-            game=game,
-        )
-        for attendee_id in request.data["attendees"]:
-            attendee = Gamer.objects.get(pk=attendee_id)
-            event.attendees.add(attendee)
-
-        serializer = EventSerializer(event)
-        return Response(serializer.data)
+        gamer = Gamer.objects.get(user=request.auth.user)
+        serializer = CreateEventSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        event = serializer.save(organizer=gamer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def update(self, request, pk):
         """Handle PUT requests for an event
@@ -87,11 +84,16 @@ class EventView(ViewSet):
 
     def destroy(self, request, pk=None):
         """Handle DELETE requests for events
+
         Returns:
-            Response: None with 204 status code
+            Response -- Empty body with 204 status code
         """
-        event = Event.objects.get(pk=pk)
-        event.delete()
+        try:
+            event = Event.objects.get(pk=pk)
+            event.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Event.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
     @action(methods=["post"], detail=True)
     def signup(self, request, pk):
@@ -115,6 +117,8 @@ class EventView(ViewSet):
 class EventSerializer(serializers.ModelSerializer):
     """JSON serializer for events"""
 
+    attendee_count = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = Event
         fields = (
@@ -126,5 +130,21 @@ class EventSerializer(serializers.ModelSerializer):
             "attendees",
             "game",
             "joined",
+            "attendee_count",
         )
         level = 1
+
+
+class CreateEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event
+        fields = [
+            "id",
+            "description",
+            "date",
+            "time",
+            "organizer",
+            "attendees",
+            "game",
+            "joined",
+        ]

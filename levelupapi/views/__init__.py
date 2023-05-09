@@ -1,5 +1,5 @@
-from .auth import login_user, register_user
-from .game_type import GameTypeView
-from .event import EventView
-from .game import GameView
-from .gamer import GamerView
+from .authView import login_user, register_user
+from .game_typeView import GameTypeView
+from .eventView import EventView
+from .gameView import GameView
+from .gamerView import GamerView
