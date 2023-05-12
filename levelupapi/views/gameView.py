@@ -57,28 +57,6 @@ class GameView(ViewSet):
         except Game.DoesNotExist as ex:
             return Response({"message": ex.args[0]}, status=status.HTTP_404_NOT_FOUND)
 
-    # def create(self, request):
-    #     """Handle POST operations
-
-    #     Returns
-    #         Response -- JSON serialized game instance
-    #     """
-    #     # get the user authorization from the token
-    #     gamer = Gamer.objects.get(user=request.auth.user)
-    #     # get the game type info from database using pk
-    #     game_type = GameType.objects.get(pk=request.data["game_type"])
-
-    #     game = Game.objects.create(
-    #         title=request.data["title"],
-    #         maker=request.data["maker"],
-    #         number_of_players=request.data["number_of_players"],
-    #         skill_level=request.data["skill_level"],
-    #         game_type=game_type,
-    #         gamer=gamer,
-    #     )
-    #     serializer = GameSerializer(game)
-    #     return Response(serializer.data)
-
     def create(self, request):
         """Handle POST operations
 
@@ -87,9 +65,12 @@ class GameView(ViewSet):
         """
         gamer = Gamer.objects.get(user=request.auth.user)
         serializer = CreateGameSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(gamer=gamer)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        if serializer.is_valid():
+            game = serializer.save(gamer=gamer)
+            game_serializer = GameSerializer(game)
+            return Response(game_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, pk):
         """Handle PUT requests for a game
@@ -108,8 +89,7 @@ class GameView(ViewSet):
         game.game_type = game_type
         game.save()
 
-        serializer = GameSerializer(game)
-        return Response(serializer.data)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def destroy(self, request, pk=None):
         """Handle DELETE requests for events

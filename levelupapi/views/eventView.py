@@ -19,12 +19,7 @@ class EventView(ViewSet):
             Response -- JSON serialized list of events
         """
 
-        # events = Event.objects.all()
         gamer = Gamer.objects.get(user=request.auth.user)
-        # events = Event.objects.annotate(attendee_count=Count("attendees"))
-        # for event in events:
-        #     event.joined = gamer in event.attendees.all()
-        # above three lines replace with following
         events = Event.objects.annotate(
             attendees_count=Count("attendees"),
             joined=Count("attendees", filter=Q(attendees=gamer)),
