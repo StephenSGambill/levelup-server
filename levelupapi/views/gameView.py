@@ -44,7 +44,6 @@ class GameView(ViewSet):
             Response -- JSON serialized game
         """
         gamer = Gamer.objects.get(user=request.auth.user)
-        # games = Game.objects.all()
         games = Game.objects.annotate(
             event_count=Count("events"),
             user_event_count=Count("events", filter=Q(gamer=gamer)),
