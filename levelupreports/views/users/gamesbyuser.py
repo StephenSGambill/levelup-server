@@ -13,17 +13,16 @@ class UserGameList(View):
             db_cursor.execute(
                 """
                 SELECT 
-                    g.id, 
-                    g.title, 
-                    g.maker, 
-                    g.skill_level, 
-                    g.number_of_players, 
-                    g.game_type_id,
-                    au.first_name || ' ' || au.last_name as full_name,
-                    g.gamer_id
-                FROM levelupapi_game AS g
-                JOIN levelupapi_gamer AS gm ON gm.id = g.gamer_id
-                JOIN auth_user AS au ON au.id = gm.user_id
+                    id, 
+                    title, 
+                    maker, 
+                    skill_level, 
+                    number_of_players, 
+                    game_type_id,
+                    full_name,
+                    user_id
+                FROM 
+                    GAMES_BY_USER
                 """
             )
             # Pass the db_cursor to the dict_fetch_all function to turn the fetch_all() response into a dictionary
@@ -76,7 +75,7 @@ class UserGameList(View):
                 # See if the gamer has been added to the games_by_user list already
                 user_dict = None
                 for user_game in games_by_user:
-                    if user_game["gamer_id"] == row["gamer_id"]:
+                    if user_game["user_id"] == row["user_id"]:
                         user_dict = user_game
 
                 if user_dict:
@@ -86,7 +85,7 @@ class UserGameList(View):
                     # If the user is not on the games_by_user list, create and add the user to the list
                     games_by_user.append(
                         {
-                            "gamer_id": row["gamer_id"],
+                            "user_id": row["user_id"],
                             "full_name": row["full_name"],
                             "games": [game],
                         }
